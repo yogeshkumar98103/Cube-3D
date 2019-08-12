@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+
+    <script  charset="utf-8" src = "scripts/Three.r66.noStrict.js"></script>
+    <script  charset="utf-8" src = "scripts/tween.r12.js"></script>
+    <script  charset="utf-8" src = "scripts/cuber.min.js"></script>
+
+    <link rel="stylesheet" type = "text/css" href="styles/cube.css">
+    <link rel="stylesheet" type = "text/css" href="styles/main.css">
+
+    <link href="https://fonts.googleapis.com/css?family=Lato&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div id = 'cube-container'>
+    </div>
+
+    <div id = "top-bar">
+        <span id = "heading">Rubik's Cube Solver</span>
+    </div>
+
+    <div id = "green-bar">
+        <div id = "btn-1-container">
+            <button class = "btn-1" onclick = "scramble()">Scramble</button>
+            <button class = "btn-1" onclick = "solveCube()">Solve</button>
+        </div>
+        <div class="slider-container">
+            <span class = "text speed-text"> Speed </span>
+            <input type="range" min="50" max="1000" value="300" class="slider" id="myRange">
+        </div>
+    </div>
+</body>
+
+<script charset="utf-8" src="scripts/solver.js"></script>
+<script charset="utf-8" src="scripts/main.js"></script>
+
+</html>

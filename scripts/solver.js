@@ -1,14 +1,12 @@
 var cube = new ERNO.Cube();
 var cubeContainer = document.getElementById('cube-container');
 cubeContainer.appendChild(cube.domElement);
+// document.body.appendChild(cube.domElement);
 
 // Modify some properties of cube
-
 cube.keyboardControlsEnabled.rotationsSpeed = 15;
-cube.twistDuration = 300;
+cube.twistDuration = slider.value;
 cube.controls.rotationSpeed = 20
-
-
 
 /*
 cube.keyboardControlsEnabled.rotationsSpeed  -> controls rotation sensitivity of mouse
@@ -26,6 +24,7 @@ var colorsIndex = {white : 0, red : 1, yellow : 2, orange : 3, green: 4, blue : 
 let centreColors = colors;
 // For a given position in array representation of cube, this gives the corresponding location of div on canvas
 var position = [[0,0],[0,1],[0,2],[1,2],[2,2],[2,1],[2,0],[1,0]];
+var isRotating = false;
 
 function createCubeMatrix(){
     var matrix = []
@@ -68,6 +67,7 @@ function swapOrder(order){
     }
 }
 // This function performs a valid move on Cube
+// moveType: {'R', 'L', 'F', 'U', 'D', 'B'} <= one of these characters
 function move(moveType, clockWise = true){
     let order = orderOfIndices(moveType);
 
@@ -212,6 +212,7 @@ function moveCombination(moves){
 
 // This functions scrambles Cube
 function scramble(){
+    pendingUpdatesToCubeMatrix();
     let num = 0, index;
     let clockWise;
     let validMoves = ["R","L","F","B","U","D"];
@@ -234,14 +235,8 @@ function scramble(){
 
 // This functions brings the cube to initial (solved) state
 function reset(){
-    cubeMatrix = createAllMatrices();
+    cubeMatrix = createCubeMatrix();
     globalMoveList = [];
-    // for(let i = 0; i<6; i++){
-    //     for(let j = 0; j<8; j++){
-    //         changeColor(i,j);
-    //     }
-    // }
-    
 }
 
 var edges = [[[1,1],[0,5]], [[1,3],[5,7]], [[1,5],[2,1]], [[1,7],[4,3]],
@@ -329,6 +324,9 @@ function findCorner(color1, color2, color3){
 
 // SOLVE CUBE
 function solveCube(){
+    // if(cube.isSolved) return;
+    pendingUpdatesToCubeMatrix();
+
     // Layer 1
     layer1Cross();
     layer1Corners();
@@ -345,7 +343,48 @@ function solveCube(){
     // Perform Moves
     finalizeMoves(globalMoveList);
     globalMoveList = [];
+}
+
+// Get colors on cube and update it in cubeMatrix
+function pendingUpdatesToCubeMatrix(){
+    let history = cube.twistQueue.history;
     
+    for(let mv of history){
+        let times = (mv.degrees / 90);
+        let c = mv.command;
+        for(let i = 0; i < times; ++i){
+            switch(c){
+                case 'S':
+                    move('B', true);
+                    move('F', false);
+                    break;
+                case 's':
+                    move('F', true);
+                    move('B', false);
+                    break;
+                case 'm':
+                    move('R', false);
+                    move('L', true);
+                    break;
+                case 'M':
+                    move('L', false);
+                    move('R', true);
+                    break;
+                case 'E':
+                    move('U', false);
+                    move('D', true);
+                    break;
+                case 'e':
+                    move('D', false);
+                    move('U', true);
+                    break;
+                default: move(c.toUpperCase(), c.toUpperCase() == c)
+            }
+        }
+    }
+    
+    cube.twistQueue.history = [];
+    cube.twistQueue.future = [];
 }
 
 // First Layer
@@ -868,8 +907,7 @@ function finalAllign(){
 
 // Finalize Moves
 function finalizeMoves(moveList){
-    let finalMovesList = [];
-    let top = -1;
+    let moveList2 = [];
     let rotationTable = {
         'left'  :   {'F' : 'L', 'B' : 'R', 'U' : 'U', 'D' : 'D', 'R' : 'F', 'L' : 'B'},
         'right' :   {'F' : 'R', 'B' : 'L', 'U' : 'U', 'D' : 'D', 'R' : 'B', 'L' : 'F'},
@@ -878,24 +916,18 @@ function finalizeMoves(moveList){
     }
     
     let movesTable = {'F' : 'F', 'B' : 'B', 'U' : 'U', 'D' : 'D', 'R' : 'R', 'L' : 'L'};
-    let m;
-    for(let i = 0; i < moveList.length; i++){
-        m = moveList[i];
+    for(let m of moveList){
         if(m.length < 3 && m !== 'up'){
-            if(m.length == 1 && (top === -1 || !areComplementary(finalMovesList[top],movesTable[m]))){
-                finalMovesList.push(movesTable[m]);
-                top++;  
-            }
-            else if(m.length == 2 && (top === -1 || !areComplementary(finalMovesList[top],movesTable[m[0]] + 'i'))){
-                finalMovesList.push(movesTable[m[0]].toLowerCase());
-                top++;
+            // This is rotation move
+            if(m.length == 1){
+                moveList2.push(movesTable[m]);
             }
             else{
-                finalMovesList.pop();
-                top--;
+                moveList2.push(movesTable[m[0]].toLowerCase());
             }
         }
         else{
+            // This is an orientation move
             newMovesTable = {};
             for(let move in rotationTable[m]){
                 newMovesTable[move] = movesTable[rotationTable[m][move]];
@@ -903,8 +935,56 @@ function finalizeMoves(moveList){
             movesTable = newMovesTable;
         }
     }
+
+    // Compress Moves List
+    let finalMovesList = [];
+    let i = 0;
+    while(i < moveList2.length){
+        let j = i;
+        let countClockwise = 0;
+        let countCounterClockwise = 0;
+        let lm = moveList2[i].toLowerCase();
+        let um = moveList2[i].toUpperCase();
+        while(true){
+            if(moveList2[j] == um) ++countClockwise;
+            else if(moveList2[j] == lm) ++countCounterClockwise;
+            else break;
+            ++j;
+        }
+        if(countClockwise >= countCounterClockwise){
+            let diff = (countClockwise - countCounterClockwise) % 4;
+            switch(diff){
+                case 1: finalMovesList.push(um);                              break;
+                case 2: finalMovesList.push(um); finalMovesList.push(um);     break;
+                case 3: finalMovesList.push(lm);                              break;
+            }
+        }
+        else{
+            let diff = (countCounterClockwise - countClockwise) % 4;
+            switch(diff){
+                case 1: finalMovesList.push(lm);                              break;
+                case 2: finalMovesList.push(lm); finalMovesList.push(lm);     break;
+                case 3: finalMovesList.push(um);                              break;
+            }
+        }
+        i = j;
+    }
+
     let finalMovesString = finalMovesList.join('');
+    console.log(finalMovesString);
     cube.twist(finalMovesString);
+    isRotating = true;
+    rotateTimer = setInterval(checkStatus, 500)
+}
+
+let rotateTimer;
+function checkStatus(){
+    if(!isRotating || cube.twistQueue.future.length == 0){
+        isRotating = false;
+        cube.twistQueue.history = [];
+        cube.twistQueue.future = [];
+        clearInterval(rotateTimer);
+    }
 }
 
 function areComplementary(a, b){

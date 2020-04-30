@@ -1,0 +1,130 @@
+html, body { 
+    width : 100%;
+    height: 100%;
+    margin : 0; 
+    padding: 0;
+    background: aquamarine;
+    overflow: hidden;
+}
+
+#cube-container {
+    width : 100%;
+    height : 100%;
+    transform: scale(0.6);
+    overflow: visible;
+}
+
+.text{
+    font-family: 'Lato', sans-serif;
+}
+
+#top-bar{
+    width : 100%;
+    height : 50px;
+    background-color : #333333;
+
+    #heading{
+        text-align: center;
+        line-height: 50px;
+        color: white;
+        font-family: 'Lato', sans-serif;
+        font-size: 28px;
+        font-weight: 600;
+    }
+}
+
+
+#green-bar{
+    position : relative;
+    width : 100%;
+    height : 40px;
+    background-color : #33cc40;
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    .btn-1{
+        width : 120px;
+        height : 25px;
+        line-height: 25px;
+        background-color : #fff;
+        font-family: 'Lato', sans-serif;
+        font-size: 16px;
+        color : #333;
+        outline : none;
+        border : 0;
+        text-transform: uppercase;
+    }
+}
+
+.slider-container {
+    position: relative;
+    width: 100%;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+
+    div{
+        position: relative;
+        display: grid;
+        width: 70%;
+        height: 100%;
+        grid-template-columns: 1fr 3fr;
+        
+        .speed-text{
+            color: #333;
+            font-weight: 600;
+            font-size: 16px;
+            line-height: 40px;
+            text-transform: uppercase;
+        }
+
+        .slider {
+            margin-top: auto !important;
+            margin-bottom: auto !important;
+            appearance: none;
+            height: 20px;
+            line-height: 40px;
+            border-radius: 10px;
+            background: #333;
+            outline: none;
+            opacity: 0.9;
+            transition: opacity .2s;
+            transform: rotateZ(180deg);
+
+            &:hover {
+                opacity: 1;
+            }
+
+            &::-webkit-slider-thumb {
+                appearance: none;
+                width: 20px; 
+                height: 20px; 
+                border-radius: 50%;
+                background: #fff;
+                cursor: pointer; 
+              }
+            
+            &::-moz-range-thumb {
+                width: 20px;
+                height: 20px;
+                border-radius: 50%;
+                background: #fff;
+                cursor: pointer;
+            }
+        }
+    }
+}
+
+@media only screen and (min-width: 600px) {
+    .slider-container {
+        position: absolute;
+        right : 80px;
+        top : 50px;
+        width: 150px;
+        .speed-text{
+            color: white;
+        }
+    }
+}
